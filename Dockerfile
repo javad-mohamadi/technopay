@@ -12,6 +12,7 @@ RUN apk add --update --no-cache \
     bash \
     shadow \
     git \
+    openssl \
     curl \
     build-base \
     autoconf \
