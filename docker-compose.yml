@@ -1,0 +1,72 @@
+version: '3.9'
+services:
+    app:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: technopay/php
+        container_name: technopay-app
+        restart: always
+        tty: true
+        depends_on:
+          - db
+          - redis
+        entrypoint: ./docker/entrypoint-app.sh
+        volumes:
+          - ./:/var/www
+          - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+          - technopay-network
+
+    webserver:
+        image: nginx:alpine
+        container_name: technopay-nginx
+        restart: always
+        tty: true
+        ports:
+          - "127.0.0.1:8083:80"
+        volumes:
+          - ./:/var/www
+          - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+        networks:
+          - technopay-network
+
+    db:
+        image: mysql:8.0.32
+        container_name: technopay-db
+        restart: always
+        tty: true
+        environment:
+          MYSQL_DATABASE: "technopay"
+          MYSQL_ROOT_PASSWORD: "root"
+          MYSQL_USER: "technopay"
+          MYSQL_PASSWORD: "secret"
+        ports:
+          - "127.0.0.1:3304:3306"
+        volumes:
+          - technopaydbdata:/var/lib/mysql/
+          - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+        networks:
+          - technopay-network
+
+    redis:
+        image: redis:latest
+        container_name: technopay-redis
+        ports:
+          - "127.0.0.1:6376:6379"
+        volumes:
+          - technopayredisdata:/data
+        networks:
+          - technopay-network
+
+#Docker Networks
+networks:
+    technopay-network:
+        driver: bridge
+
+#Volumes
+volumes:
+    technopaydbdata:
+        driver: "local"
+    technopayredisdata:
+        driver: "local"
