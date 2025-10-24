@@ -14,7 +14,6 @@ class WalletService implements WalletServiceInterface
             'user_id' => $user->id,
             'balance' => $initialBalance,
             'is_active' => true,
-            'version' => config('wallet.initial_version'),
         ]);
     }
 }

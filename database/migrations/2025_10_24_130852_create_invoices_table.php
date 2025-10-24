@@ -1,6 +1,6 @@
 <?php
 
-use App\InvoiceStatus;
+use App\Enums\InvoiceStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

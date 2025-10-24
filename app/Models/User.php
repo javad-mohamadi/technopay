@@ -24,6 +24,7 @@ class User extends Authenticatable implements OAuthenticatable
         'name',
         'email',
         'password',
+        'is_blocked',
     ];
 
     /**
@@ -34,6 +35,10 @@ class User extends Authenticatable implements OAuthenticatable
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'is_blocked' => 'boolean',
     ];
 
     /**

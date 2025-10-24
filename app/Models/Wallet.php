@@ -14,7 +14,11 @@ class Wallet extends Model
         'user_id',
         'balance',
         'is_active',
-        'version',
+    ];
+
+    protected $casts = [
+        'balance' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     public function user(): BelongsTo
