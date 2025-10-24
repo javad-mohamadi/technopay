@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\General\V1;
+namespace App\Http\Controllers\General;
 
 use App\DTOs\Auth\LoginDTO;
 use App\DTOs\Auth\RegisterDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserDetailsResource;
 use App\Models\User;
 use App\Services\Interfaces\AuthenticationServiceInterface;
 use Illuminate\Http\JsonResponse;
@@ -39,9 +40,9 @@ class AuthController extends Controller
         return response()->json($response->json(), Response::HTTP_OK);
     }
 
-    public function user(Request $request): JsonResponse
+    public function user(Request $request): UserDetailsResource
     {
-        return response()->json($request->user(), Response::HTTP_OK);
+        return UserDetailsResource::make($request->user());
     }
 
     public function logout(Request $request): JsonResponse
