@@ -8,6 +8,8 @@ services:
         container_name: technopay-app
         restart: always
         tty: true
+        environment:
+          APP_ENV: "local"
         depends_on:
           - db
           - redis
