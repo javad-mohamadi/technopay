@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\DTOs\Auth\RegisterDTO;
+use App\Exceptions\LogicException;
 use App\Models\User;
 use App\Services\Interfaces\AuthenticationServiceInterface;
+use App\Services\Interfaces\WalletServiceInterface;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response as HttpResponse;
@@ -12,9 +14,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class AuthenticationService implements AuthenticationServiceInterface
 {
+    public function __construct(protected WalletServiceInterface $walletService) {}
+
     /**
      * @string
      */
@@ -33,16 +39,27 @@ class AuthenticationService implements AuthenticationServiceInterface
 
     public function register(RegisterDTO $dto): PromiseInterface|HttpResponse
     {
-        $user = User::query()->create([
-            'name' => $dto->name,
-            'email' => $dto->email,
-            'password' => Hash::make($dto->password),
-        ]);
+        DB::beginTransaction();
 
-        return $this->createToken(
-            email: $user->email,
-            password: $dto->password
-        );
+        try {
+            $user = User::query()->create([
+                'name' => $dto->name,
+                'email' => $dto->email,
+                'password' => Hash::make($dto->password),
+            ]);
+            $this->walletService->create($user, config('wallet.initial_balance'));
+
+            DB::commit();
+
+            return $this->createToken(
+                email: $user->email,
+                password: $dto->password
+            );
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('The transaction was rolled back and the user was not created: '.$e->getMessage());
+            throw new LogicException(Response::HTTP_BAD_REQUEST, 'User was not created.');
+        }
     }
 
     public function logout(User $user): void
@@ -57,8 +74,9 @@ class AuthenticationService implements AuthenticationServiceInterface
                     ->where('access_token_id', $accessToken->id)
                     ->update(['revoked' => true]);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Logout failed: '.$e->getMessage());
+            throw new LogicException(Response::HTTP_BAD_REQUEST, 'Logout failed');
         }
     }
 
