@@ -1,42 +1,63 @@
 #!/bin/sh
-echo "=========================Entrypoint is running========================="
+set -e
+
+echo "========================= Entrypoint is running ========================="
 
 echo "Waiting for MySQL container to start..."
-sleep 15  # Add a delay of 15 seconds (adjust as needed)
+sleep 15
 
-echo "composer install"
-composer install
+echo "==> Running composer install"
+composer install --no-interaction --prefer-dist --optimize-autoloader
 
-echo "composer dum autoload"
+echo "==> Dumping autoload"
 composer dump-autoload
 
-chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+echo "==> Setting correct permissions"
 
+mkdir -p /var/www/storage /var/www/bootstrap/cache
 
-echo "==> Start to run migrations"
-php /var/www/artisan migrate
-echo "==> Complete migrations"
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-echo "==> Start to run seeder"
-php /var/www/artisan db:seed
-echo "==> Complete seeder"
+find /var/www/storage -type d -exec chmod 775 {} \;
+find /var/www/storage -type f -exec chmod 664 {} \;
+find /var/www/bootstrap/cache -type d -exec chmod 775 {} \;
+find /var/www/bootstrap/cache -type f -exec chmod 664 {} \;
 
-echo "==> Start to clear cached data"
-php /var/www/artisan config:clear
-php /var/www/artisan cache:clear
-php /var/www/artisan route:clear
-php /var/www/artisan view:clear
-php /var/www/artisan clear-compiled
-echo "==> Cached cleared successfully"
+echo "==> Checking Passport keys..."
+
+if [ ! -f /var/www/storage/oauth-private.key ] || [ ! -f /var/www/storage/oauth-public.key ]; then
+    echo "==> Passport keys not found. Generating new keys..."
+    php /var/www/artisan passport:keys --force || true
+else
+    echo "==> Passport keys already exist."
+fi
+
+if [ -f /var/www/storage/oauth-private.key ]; then
+    chmod 600 /var/www/storage/oauth-private.key
+    chown www-data:www-data /var/www/storage/oauth-private.key
+fi
+
+if [ -f /var/www/storage/oauth-public.key ]; then
+    chmod 600 /var/www/storage/oauth-public.key
+    chown www-data:www-data /var/www/storage/oauth-public.key
+fi
 
 if [ "${APP_ENV}" = "local" ] || [ "${APP_ENV}" = "development" ]; then
     echo "[$(date)] Running migrations..."
-    php artisan migrate --force
+    php /var/www/artisan migrate --force || true
 
     echo "[$(date)] Running seeders..."
-    php artisan db:seed --force
+    php /var/www/artisan db:seed --force || true
 fi
 
-echo "[$(date)] Starting PHP-FPM..."
+echo "==> Clearing Laravel caches"
+php /var/www/artisan config:clear || true
+php /var/www/artisan cache:clear || true
+php /var/www/artisan route:clear || true
+php /var/www/artisan view:clear || true
+php /var/www/artisan clear-compiled || true
 
+echo "==> Caches cleared successfully"
+
+echo "[$(date)] Starting PHP-FPM as www-data..."
 exec php-fpm
