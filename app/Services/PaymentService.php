@@ -27,6 +27,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -76,6 +77,17 @@ class PaymentService implements PaymentServiceInterface
             throw new LogicException(Response::HTTP_UNPROCESSABLE_ENTITY, 'The provided OTP is invalid or has expired.');
         }
 
+        $amount = $this->invoiceService->find($dto->invoiceId)->amount;
+        $key = 'system:daily_total:'.today()->toDateString();
+        $limit = config('wallet.max_global_daily_spend');
+
+        $total = Redis::incrbyfloat($key, $amount);
+        if ($total > $limit) {
+            Redis::decrbyfloat($key, $amount);
+            throw new LogicException('Global daily spending limit exceeded');
+        }
+        Redis::expireAt($key, today()->addDay()->startOfDay()->timestamp);
+
         try {
             return DB::transaction(function () use ($dto) {
                 $user = $this->userService->findAndLock($dto->userId);
@@ -98,16 +110,15 @@ class PaymentService implements PaymentServiceInterface
                     $dto->otp);
                 $transaction->load(['wallet.user', 'invoice']);
                 DB::afterCommit(fn () => event(new PaymentSuccessful($transaction)));
+                DB::afterCommit(fn () => $this->dailySpendingLimitService->incrementTodaySpend($invoice->amount));
 
                 return $transaction;
-
             }, 5);
         } catch (ValidationException) {
+            Redis::decrbyfloat($key, $amount);
             $invoice = $this->invoiceService->find($dto->invoiceId);
             $user = $this->userService->findOrFail($dto->userId);
-
             event(new PaymentFailed($invoice, $user, 'Payment could not be completed.'));
-
             throw new PaymentFailedException(
                 Response::HTTP_INTERNAL_SERVER_ERROR,
                 'Payment could not be completed due to a system error.',
@@ -119,7 +130,6 @@ class PaymentService implements PaymentServiceInterface
     {
         $this->walletService->debit($wallet, $invoice->amount);
         $this->invoiceService->markAsPaid($invoice);
-        $this->dailySpendingLimitService->incrementTodaySpend($invoice->amount);
 
         return $this->transactionService->log(
             walletId: $wallet->id,
