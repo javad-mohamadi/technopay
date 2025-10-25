@@ -14,7 +14,6 @@ use App\Models\Wallet;
 use App\Services\Interfaces\DailySpendingLimitServiceInterface;
 use App\Services\Interfaces\InvoiceServiceInterface;
 use App\Services\Interfaces\PaymentServiceInterface;
-use App\Services\Interfaces\RefundServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use App\Services\Interfaces\TwoFactorServiceInterface;
 use App\Services\Interfaces\UserServiceInterface;
@@ -41,7 +40,6 @@ class PaymentService implements PaymentServiceInterface
         protected InvoiceServiceInterface $invoiceService,
         protected DailySpendingLimitServiceInterface $dailySpendingLimitService,
         protected TwoFactorServiceInterface $twoFactorService,
-        protected RefundServiceInterface $refundService,
     ) {}
 
     public function initiatePayment(int $userId, Invoice $invoice): void
@@ -105,21 +103,14 @@ class PaymentService implements PaymentServiceInterface
 
             }, 5);
         } catch (ValidationException) {
-            $originalTransaction = $this->transactionService->findByInvoiceId($dto->invoiceId);
+            $invoice = $this->invoiceService->find($dto->invoiceId);
+            $user = $this->userService->findOrFail($dto->userId);
 
-            if ($originalTransaction && $originalTransaction->type === TransactionType::DEBIT) {
-                $this->refundService->processRefund($originalTransaction->id);
-            }
-        } catch (Throwable) {
-            event(new PaymentFailed(
-                $this->invoiceService->find($dto->invoiceId),
-                $this->userService->findOrFail($dto->userId),
-                'A critical error occurred during payment.'
-            ));
+            event(new PaymentFailed($invoice, $user, 'Payment could not be completed.'));
 
             throw new PaymentFailedException(
                 Response::HTTP_INTERNAL_SERVER_ERROR,
-                'Payment could not be completed due to a system error.'
+                'Payment could not be completed due to a system error.',
             );
         }
     }
