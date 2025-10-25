@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\DTOs\Payment\PayInvoiceDTO;
+use App\Exceptions\LogicException;
 use App\Http\Requests\PayInvoiceValidation;
 use App\Models\Invoice;
 use App\Services\Interfaces\PaymentServiceInterface;
@@ -43,7 +44,7 @@ class InvoiceController extends Controller
                 'transaction_reference' => $transaction->id,
             ]);
 
-        } catch (ValidationException $e) {
+        } catch (LogicException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (Throwable $e) {
             Log::critical('Unexpected payment error.', ['error' => $e->getMessage()]);

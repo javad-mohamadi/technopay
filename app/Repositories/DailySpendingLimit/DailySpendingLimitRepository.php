@@ -5,7 +5,6 @@ namespace App\Repositories\DailySpendingLimit;
 use App\Models\DailySpendingLimit;
 use App\Repositories\BaseRepository;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class DailySpendingLimitRepository extends BaseRepository implements DailySpendingLimitRepositoryInterface
 {
@@ -31,9 +30,11 @@ class DailySpendingLimitRepository extends BaseRepository implements DailySpendi
 
     public function incrementTodaySpend(float $amount): void
     {
-        $this->model->updateOrCreate(
+        $record = $this->model->firstOrCreate(
             ['date' => Carbon::today()],
-            ['total_spent' => DB::raw("total_spent + {$amount}")]
+            ['total_spent' => 0]
         );
+
+        $record->increment('total_spent', $amount);
     }
 }
