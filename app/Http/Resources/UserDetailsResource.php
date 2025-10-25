@@ -18,6 +18,7 @@ class UserDetailsResource extends JsonResource
             'id' => $this->resource->id,
             'name' => $this->resource->name,
             'email' => $this->resource->email,
+            'balance' => $this->resource?->wallet->balance ?? 0,
         ];
     }
 }
