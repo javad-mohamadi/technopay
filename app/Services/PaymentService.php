@@ -73,7 +73,7 @@ class PaymentService implements PaymentServiceInterface
     public function pay(PayInvoiceDTO $dto): Transaction
     {
         if (! $this->twoFactorService->verifyOtp($dto)) {
-            throw new ValidationException('The provided OTP is invalid or has expired.');
+            throw new LogicException(Response::HTTP_UNPROCESSABLE_ENTITY, 'The provided OTP is invalid or has expired.');
         }
 
         try {
@@ -96,7 +96,7 @@ class PaymentService implements PaymentServiceInterface
                     $dto->userId,
                     $dto->invoiceId,
                     $dto->otp);
-
+                $transaction->load(['wallet.user', 'invoice']);
                 DB::afterCommit(fn () => event(new PaymentSuccessful($transaction)));
 
                 return $transaction;
