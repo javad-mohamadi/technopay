@@ -7,5 +7,7 @@ use App\Models\Transaction;
 
 interface TransactionServiceInterface
 {
-    public function log(int $walletId, TransactionType $type, float $amount, ?string $description = null): Transaction;
+    public function log(int $walletId, TransactionType $type, float $amount, ?string $description = null, ?int $invoiceId = null): Transaction;
+
+    public function findByInvoiceId(int $invoiceId);
 }

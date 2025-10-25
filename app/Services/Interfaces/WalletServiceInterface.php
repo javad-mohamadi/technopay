@@ -4,7 +4,6 @@ namespace App\Services\Interfaces;
 
 use App\Models\User;
 use App\Models\Wallet;
-use Illuminate\Database\Eloquent\Model;
 
 interface WalletServiceInterface
 {
@@ -16,5 +15,7 @@ interface WalletServiceInterface
 
     public function getActiveWallet(int $userId): ?Wallet;
 
-    public function findAndLock(int $id): Model;
+    public function findAndLock(int $id): Wallet;
+
+    public function getActiveWalletByUserIdAndLock(int $userId): ?Wallet;
 }

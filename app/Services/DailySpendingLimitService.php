@@ -32,7 +32,12 @@ class DailySpendingLimitService implements DailySpendingLimitServiceInterface
         $this->repository->incrementTodaySpend($amount);
     }
 
-    public function findTodaySpendAndLock(): DailySpendingLimit
+    public function findTodaySpend(): ?DailySpendingLimit
+    {
+        return $this->repository->findTodaySpend();
+    }
+
+    public function findTodaySpendAndLock(): ?DailySpendingLimit
     {
         return $this->repository->findTodaySpendAndLock();
     }

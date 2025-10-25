@@ -19,4 +19,13 @@ class WalletRepository extends BaseRepository implements WalletRepositoryInterfa
             ->where('is_active', true)
             ->first();
     }
+
+    public function getActiveWalletByUserIdAndLock(int $userId): ?Wallet
+    {
+        return $this->model
+            ->where('user_id', $userId)
+            ->where('is_active', true)
+            ->lockForUpdate()
+            ->first();
+    }
 }

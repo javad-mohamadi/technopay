@@ -9,6 +9,11 @@ class UserService implements UserServiceInterface
 {
     public function __construct(protected UserRepositoryInterface $userRepository) {}
 
+    public function findOrFail(int $id)
+    {
+        return $this->userRepository->findOrFail($id);
+    }
+
     public function findAndLock(int $id)
     {
         return $this->userRepository->findAndLock($id);

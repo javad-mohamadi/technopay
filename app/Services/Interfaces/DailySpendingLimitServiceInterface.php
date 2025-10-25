@@ -8,7 +8,9 @@ interface DailySpendingLimitServiceInterface
 {
     public function canSpend(float $amount): array;
 
+    public function findTodaySpend(): ?DailySpendingLimit;
+
     public function incrementTodaySpend(float $amount): void;
 
-    public function findTodaySpendAndLock(): DailySpendingLimit;
+    public function findTodaySpendAndLock(): ?DailySpendingLimit;
 }
