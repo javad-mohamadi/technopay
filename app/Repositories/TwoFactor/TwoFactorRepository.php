@@ -12,10 +12,11 @@ class TwoFactorRepository extends BaseRepository implements TwoFactorRepositoryI
         parent::__construct($model);
     }
 
-    public function findValidOtp(int $userId, string $otp): ?TwoFactorVerification
+    public function findValidOtp(int $userId, int $invoiceId, string $otp): ?TwoFactorVerification
     {
         return $this->model
             ->where('user_id', $userId)
+            ->where('invoice_id', $invoiceId)
             ->where('otp_code', $otp)
             ->where('is_verified', false)
             ->where('expires_at', '>', now())

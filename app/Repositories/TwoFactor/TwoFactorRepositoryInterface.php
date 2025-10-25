@@ -6,5 +6,5 @@ use App\Models\TwoFactorVerification;
 
 interface TwoFactorRepositoryInterface
 {
-    public function findValidOtp(int $userId, string $otp): ?TwoFactorVerification;
+    public function findValidOtp(int $userId, int $invoiceId, string $otp): ?TwoFactorVerification;
 }

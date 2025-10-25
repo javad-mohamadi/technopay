@@ -2,4 +2,7 @@
 
 namespace App\Repositories\Transaction;
 
-interface TransactionRepositoryInterface {}
+interface TransactionRepositoryInterface
+{
+    public function findByInvoiceId(int $invoiceId);
+}

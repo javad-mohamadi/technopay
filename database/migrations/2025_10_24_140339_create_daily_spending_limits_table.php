@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('daily_spending_limits', function (Blueprint $table) {
             $table->id();
-            $table->date('date');
+            $table->date('date')->nullable();
             $table->decimal('total_spent', 30, 2);
             $table->timestamps();
         });

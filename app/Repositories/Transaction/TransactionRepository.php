@@ -11,4 +11,9 @@ class TransactionRepository extends BaseRepository implements TransactionReposit
     {
         parent::__construct($model);
     }
+
+    public function findByInvoiceId(int $invoiceId)
+    {
+        return $this->model->where('invoice_id', $invoiceId)->first();
+    }
 }

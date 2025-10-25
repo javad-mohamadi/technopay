@@ -45,7 +45,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
         return $model->delete();
     }
 
-    public function findAndLock(int|string $id): Model
+    public function findAndLock(int|string $id)
     {
         return $this->model->where('id', $id)->lockForUpdate()->first();
     }

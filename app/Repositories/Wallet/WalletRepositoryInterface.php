@@ -7,4 +7,6 @@ use App\Models\Wallet;
 interface WalletRepositoryInterface
 {
     public function findActiveByUserId(int $userId): ?Wallet;
+
+    public function getActiveWalletByUserIdAndLock(int $userId): ?Wallet;
 }
