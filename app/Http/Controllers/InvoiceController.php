@@ -41,7 +41,7 @@ class InvoiceController extends Controller
 
             return response()->json([
                 'message' => 'Payment successful!',
-                'transaction_reference' => $transaction->id,
+                'transaction_reference' => $transaction->reference_id,
             ]);
 
         } catch (LogicException $e) {
