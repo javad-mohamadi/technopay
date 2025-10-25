@@ -6,12 +6,11 @@ use App\DTOs\Auth\RegisterDTO;
 use App\Exceptions\LogicException;
 use App\Models\User;
 use App\Services\Interfaces\AuthenticationServiceInterface;
-use App\Services\Interfaces\WalletServiceInterface;
+use App\Services\Interfaces\RegistrationServiceInterface;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +18,7 @@ use Throwable;
 
 class AuthenticationService implements AuthenticationServiceInterface
 {
-    public function __construct(protected WalletServiceInterface $walletService) {}
+    public function __construct(protected RegistrationServiceInterface $registrationService) {}
 
     /**
      * @string
@@ -37,27 +36,25 @@ class AuthenticationService implements AuthenticationServiceInterface
         );
     }
 
-    public function register(RegisterDTO $dto): PromiseInterface|HttpResponse
+    public function register(RegisterDTO $dto): array
     {
-        DB::beginTransaction();
-
         try {
-            $user = User::query()->create([
-                'name' => $dto->name,
-                'email' => $dto->email,
-                'password' => Hash::make($dto->password),
-            ]);
-            $this->walletService->create($user, config('wallet.initial_balance'));
+            $user = $this->registrationService->register($dto);
 
-            DB::commit();
-
-            return $this->createToken(
+            $tokenData = $this->createToken(
                 email: $user->email,
                 password: $dto->password
             );
+            if ($tokenData->failed()) {
+                throw new \Exception(trans('auth.bad_request'), Response::HTTP_BAD_REQUEST);
+            }
+
+            return [
+                'user' => $user,
+                'tokenData' => $tokenData,
+            ];
         } catch (Throwable $e) {
-            DB::rollBack();
-            Log::error('The transaction was rolled back and the user was not created: '.$e->getMessage());
+            Log::error('User was not created: '.$e->getMessage());
             throw new LogicException(Response::HTTP_BAD_REQUEST, 'User was not created.');
         }
     }

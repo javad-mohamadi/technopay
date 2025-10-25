@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserDetailsResource;
+use App\Http\Resources\UserRegisterResource;
 use App\Models\User;
 use App\Services\Interfaces\AuthenticationServiceInterface;
 use Illuminate\Http\JsonResponse;
@@ -18,15 +19,11 @@ class AuthController extends Controller
 {
     public function __construct(protected AuthenticationServiceInterface $service) {}
 
-    public function register(RegisterRequest $request): JsonResponse
+    public function register(RegisterRequest $request): UserRegisterResource
     {
         $response = $this->service->register(RegisterDTO::getFromRequest($request));
 
-        if ($response->failed()) {
-            return response()->json(['error' => trans('auth.bad_request')], Response::HTTP_BAD_REQUEST);
-        }
-
-        return response()->json($response->json(), Response::HTTP_CREATED);
+        return UserRegisterResource::make($response);
     }
 
     public function login(LoginRequest $request): JsonResponse
