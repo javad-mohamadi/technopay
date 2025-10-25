@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('two_factor_verifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
             $table->string('otp_code', 6);
             $table->timestamp('expires_at');
             $table->boolean('is_verified')->default(false);

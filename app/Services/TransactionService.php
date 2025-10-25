@@ -23,4 +23,9 @@ class TransactionService implements TransactionServiceInterface
             'metadata' => ['description' => $description],
         ]);
     }
+
+    public function findByInvoiceId(int $invoiceId)
+    {
+        return $this->transactionRepository->findByInvoiceId($invoiceId);
+    }
 }

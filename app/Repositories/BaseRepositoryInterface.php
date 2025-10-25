@@ -18,5 +18,5 @@ interface BaseRepositoryInterface
 
     public function delete(Model $model): bool;
 
-    public function findAndLock(int|string $id): Model;
+    public function findAndLock(int|string $id);
 }

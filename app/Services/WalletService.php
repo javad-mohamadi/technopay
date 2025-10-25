@@ -8,7 +8,6 @@ use App\Models\Wallet;
 use App\Repositories\Wallet\WalletRepositoryInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use App\Services\Interfaces\WalletServiceInterface;
-use Illuminate\Database\Eloquent\Model;
 use LogicException;
 
 class WalletService implements WalletServiceInterface
@@ -66,7 +65,12 @@ class WalletService implements WalletServiceInterface
         return $this->walletRepository->findActiveByUserId($userId);
     }
 
-    public function findAndLock(int $id): Model
+    public function getActiveWalletByUserIdAndLock(int $userId): ?Wallet
+    {
+        return $this->walletRepository->getActiveWalletByUserIdAndLock($userId);
+    }
+
+    public function findAndLock(int $id): Wallet
     {
         return $this->walletRepository->findAndLock($id);
     }

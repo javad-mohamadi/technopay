@@ -8,6 +8,7 @@ use App\Services\Interfaces\AuthenticationServiceInterface;
 use App\Services\Interfaces\DailySpendingLimitServiceInterface;
 use App\Services\Interfaces\InvoiceServiceInterface;
 use App\Services\Interfaces\PaymentServiceInterface;
+use App\Services\Interfaces\RefundServiceInterface;
 use App\Services\Interfaces\RegistrationServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use App\Services\Interfaces\TwoFactorServiceInterface;
@@ -15,6 +16,7 @@ use App\Services\Interfaces\UserServiceInterface;
 use App\Services\Interfaces\WalletServiceInterface;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
+use App\Services\RefundService;
 use App\Services\RegistrationService;
 use App\Services\TransactionService;
 use App\Services\TwoFactorService;
@@ -38,6 +40,7 @@ class ServiceLayerProvider extends ServiceProvider
         $this->app->bind(DailySpendingLimitServiceInterface::class, DailySpendingLimitService::class);
         $this->app->bind(PaymentServiceInterface::class, PaymentService::class);
         $this->app->bind(TwoFactorServiceInterface::class, TwoFactorService::class);
+        $this->app->bind(RefundServiceInterface::class, RefundService::class);
     }
 
     /**
