@@ -81,25 +81,24 @@ class PaymentService implements PaymentServiceInterface
         $key = 'system:daily_total:'.today()->toDateString();
         $limit = config('wallet.max_global_daily_spend');
 
-        $total = Redis::incrbyfloat($key, $amount);
-        if ($total > $limit) {
+        $totalSpendingLimit = Redis::incrbyfloat($key, $amount);
+        if ($totalSpendingLimit > $limit) {
             Redis::decrbyfloat($key, $amount);
             throw new LogicException('Global daily spending limit exceeded');
         }
         Redis::expireAt($key, today()->addDay()->startOfDay()->timestamp);
 
         try {
-            return DB::transaction(function () use ($dto) {
+            return DB::transaction(function () use ($dto, $totalSpendingLimit) {
                 $user = $this->userService->findAndLock($dto->userId);
                 $wallet = $this->walletService->getActiveWalletByUserIdAndLock($user->id);
                 $invoice = $this->invoiceService->findAndLock($dto->invoiceId);
-                $globalSpend = $this->dailySpendingLimitService->findTodaySpendAndLock();
 
                 $this->runValidationPipeline([
                     'user' => $user,
                     'wallet' => $wallet,
                     'invoice' => $invoice,
-                    'globalSpend' => $globalSpend,
+                    'globalSpend' => $totalSpendingLimit,
                 ]);
 
                 $transaction = $this->executePaymentLogic($wallet, $invoice);
