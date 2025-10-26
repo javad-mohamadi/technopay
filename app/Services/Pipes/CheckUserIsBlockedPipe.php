@@ -5,7 +5,7 @@ namespace App\Services\Pipes;
 use App\Exceptions\LogicException;
 use Closure;
 
-class CheckUserIsBlockedPipe
+class CheckUserIsBlockedPipe extends AbstractPaymentCheckerPipe
 {
     public function handle($request, Closure $next)
     {

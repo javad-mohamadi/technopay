@@ -10,14 +10,14 @@ use App\Specifications\Invoice\InvoiceIsPending;
 use App\Specifications\Validator\SpecificationValidator;
 use Closure;
 
-class ValidateInvoicePipe
+class ValidateInvoicePipe extends AbstractPaymentCheckerPipe
 {
-    public function handle(array $payload, Closure $next)
+    public function handle($request, Closure $next)
     {
         /** @var User $user */
-        $user = $payload['user'];
+        $user = $request['user'];
         /** @var Invoice $invoice */
-        $invoice = $payload['invoice'];
+        $invoice = $request['invoice'];
 
         SpecificationValidator::validate($invoice, [
             new InvoiceBelongsToUser($user),
@@ -25,6 +25,6 @@ class ValidateInvoicePipe
             new InvoiceIsNotExpired,
         ]);
 
-        return $next($payload);
+        return $next($request);
     }
 }
