@@ -39,13 +39,13 @@ class PaymentTest extends TestCase
         ]);
 
         Passport::actingAs($this->user);
-        $response = $this->postJson("/api/v1/invoice/{$invoice->id}/request-payment");
+        $response = $this->postJson("http://localhost/api/v1/invoice/{$invoice->id}/request-payment");
 
         $this->assertDatabaseCount('two_factor_verifications', 1);
         $this->assertEquals($response['message'], 'OTP has been sent successfully. It is valid for 5 minutes.');
         $otp = TwoFactorVerification::query()->where('invoice_id', $invoice->id)->first();
 
-        $response = $this->postJson('/api/v1/invoice/pay', [
+        $response = $this->postJson('http://localhost/api/v1/invoice/pay', [
             'invoice_id' => $invoice->id,
             'otp' => $otp->otp_code,
         ]);
@@ -84,7 +84,7 @@ class PaymentTest extends TestCase
             'user_id' => $this->user->id,
             'amount' => 200_000,
         ]);
-        $response = $this->postJson("/api/v1/invoice/{$invoice->id}/request-payment");
+        $response = $this->postJson("http://localhost/api/v1/invoice/{$invoice->id}/request-payment");
 
         $this->assertDatabaseCount('two_factor_verifications', 0);
         $this->assertEquals($response['message'], 'Could not process payment request.');
@@ -98,11 +98,11 @@ class PaymentTest extends TestCase
             'amount' => 4000,
         ]);
 
-        $this->postJson("/api/v1/invoice/{$invoice->id}/request-payment")->assertOk();
+        $this->postJson("http://localhost/api/v1/invoice/{$invoice->id}/request-payment")->assertOk();
 
         $this->assertDatabaseCount('two_factor_verifications', 1);
 
-        $payResponse = $this->postJson('/api/v1/invoice/pay', [
+        $payResponse = $this->postJson('http://localhost/api/v1/invoice/pay', [
             'invoice_id' => $invoice->id,
             'otp' => '000000',
         ]);
